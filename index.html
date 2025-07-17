@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phone Tilt Detector</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+    #angle { font-size: 2em; margin-top: 20px; }
+    #status { color: green; }
+  </style>
+</head>
+<body>
+
+  <h1>Phone Tilt Angle</h1>
+  <button id="enableButton">Enable Motion Access</button>
+  <div id="status"></div>
+  <div id="angle">Tilt Angle: --°</div>
+
+  <script>
+    const angleDisplay = document.getElementById("angle");
+    const statusDisplay = document.getElementById("status");
+
+    function handleOrientation(event) {
+      // `beta` is the front-to-back tilt in degrees
+      let beta = event.beta;  // -180 to 180
+      angleDisplay.textContent = `Tilt Angle: ${Math.round(beta)}°`;
+    }
+
+    function enableMotionAccess() {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS 13+
+        DeviceOrientationEvent.requestPermission()
+          .then(response => {
+            if (response === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation);
+              statusDisplay.textContent = "Motion access granted.";
+            } else {
+              statusDisplay.textContent = "Permission denied.";
+            }
+          })
+          .catch(console.error);
+      } else {
+        // Android or older iOS
+        window.addEventListener('deviceorientation', handleOrientation);
+        statusDisplay.textContent = "Motion access enabled.";
+      }
+    }
+
+    document.getElementById("enableButton").addEventListener("click", enableMotionAccess);
+  </script>
+
+</body>
+</html>

@@ -23,7 +23,13 @@
     function handleOrientation(event) {
       // `beta` is the front-to-back tilt in degrees
       let beta = event.beta;  // -180 to 180
-      angleDisplay.textContent = `Tilt Angle: ${Math.round(beta)}°`;
+      // Convert beta to radians
+      let betaRad = beta * Math.PI / 180;
+      // Calculate percentage slope
+      let percentSlope = Math.tan(betaRad) * 100;
+      // Limit display to a reasonable range and round
+      let displaySlope = Math.abs(percentSlope) > 9999 ? '∞' : percentSlope.toFixed(1);
+      angleDisplay.textContent = `Slope: ${displaySlope}%`;
     }
 
     function enableMotionAccess() {

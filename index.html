@@ -13,32 +13,52 @@
 
   <h1>Phone Tilt Angle</h1>
   <button id="enableButton">Enable Motion Access</button>
+  <button id="calibrateButton">Calibrate (Set Reference)</button>
   <div id="status"></div>
-  <div id="angle">Tilt Angle: --°</div>
+  <div id="reference">Reference: --%</div>
+  <div id="angle">Slope: --%</div>
 
   <script>
     const angleDisplay = document.getElementById("angle");
     const statusDisplay = document.getElementById("status");
+    const referenceDisplay = document.getElementById("reference");
+    let referenceBeta = null;
 
     function handleOrientation(event) {
-      // `beta` is the front-to-back tilt in degrees
       let beta = event.beta;  // -180 to 180
-      // Convert beta to radians
-      let betaRad = beta * Math.PI / 180;
-      // Calculate percentage slope
+      // Use reference if set
+      let relativeBeta = referenceBeta !== null ? beta - referenceBeta : beta;
+      let betaRad = relativeBeta * Math.PI / 180;
       let percentSlope = Math.tan(betaRad) * 100;
-      // Limit display to a reasonable range and round
       let displaySlope = Math.abs(percentSlope) > 9999 ? '∞' : percentSlope.toFixed(1);
       angleDisplay.textContent = `Slope: ${displaySlope}%`;
     }
 
+    function calibrateReference() {
+      if (window.lastBeta !== undefined) {
+        referenceBeta = window.lastBeta;
+        // Show reference as percent slope
+        let betaRad = referenceBeta * Math.PI / 180;
+        let percentSlope = Math.tan(betaRad) * 100;
+        let displayRef = Math.abs(percentSlope) > 9999 ? '∞' : percentSlope.toFixed(1);
+        referenceDisplay.textContent = `Reference: ${displayRef}%`;
+      } else {
+        referenceDisplay.textContent = 'Reference: --%';
+      }
+    }
+
+    // Store last beta for calibration
+    function storeLastBeta(event) {
+      window.lastBeta = event.beta;
+    }
+
     function enableMotionAccess() {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS 13+
         DeviceOrientationEvent.requestPermission()
           .then(response => {
             if (response === 'granted') {
               window.addEventListener('deviceorientation', handleOrientation);
+              window.addEventListener('deviceorientation', storeLastBeta);
               statusDisplay.textContent = "Motion access granted.";
             } else {
               statusDisplay.textContent = "Permission denied.";
@@ -46,13 +66,14 @@
           })
           .catch(console.error);
       } else {
-        // Android or older iOS
         window.addEventListener('deviceorientation', handleOrientation);
+        window.addEventListener('deviceorientation', storeLastBeta);
         statusDisplay.textContent = "Motion access enabled.";
       }
     }
 
     document.getElementById("enableButton").addEventListener("click", enableMotionAccess);
+    document.getElementById("calibrateButton").addEventListener("click", calibrateReference);
   </script>
 
 </body>
